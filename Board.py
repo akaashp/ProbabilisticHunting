@@ -29,7 +29,7 @@ class Board:
 
     def printBoard(self):
         #print(self.board)
-        plt.figure(figsize = (6,6))
+        plt.figure(figsize = (10,10))
         plt.pcolor(self.board,edgecolors = "black", cmap = 'Set3', linewidths = 1)
         for (j,i),label in np.ndenumerate(self.board): #consider using a mapping for label to mine/flag
             plt.text(i,j,label,ha='left',va='bottom')

@@ -2,8 +2,6 @@ import numpy as np
 import random as rand
 import math
 
-#cardinal = [(-1,0), (0,-1), (1,0), (0,1)]
-
 def manhattanD(coords1,coords2):
     return abs(coords1[0]-coords2[0])+abs(coords1[1]-coords2[1])
 
@@ -62,56 +60,6 @@ def updateBelief(currCell, deltaBelief, maxBelief, ruleType, belief, board):
 
     return maxBelief
 
-    
-
-def Agent1_2(board,ruleType,dist):
-    belief = np.full((board.dim,board.dim),1/board.dim**2, dtype = float)
-    moves = 0; totalDist = 0
-
-    if ruleType == 1:
-        rule = rule1
-    else:
-        rule = rule2
-    
-    currCell = (rand.randint(0,board.dim-1),rand.randint(0,board.dim-1))
-    prevCell = currCell
-    while True:
-        moves+=1
-        #print("moves: ",moves,"currCell: ",currCell)
-        x,y = currCell
-        if dist: totalDist += manhattanD(currCell,prevCell) #if we are counting movement as a move
-        chance = rand.random()
-       
-        if currCell == board.target:
-            print("moves: ",moves, "chance: ", chance)
-          #  print(belief)
-            m,k = board.target
-            print("currCell: ",x,y,"chance: ", board.board[x,y],"target: ",m,k,"chance: ",board.board[m,k])
-        if  chance >= board.board[x,y] and currCell == board.target:
-            #print("current target belief :", belief[x,y])
-            #print("currCell = ",currCell,'moves = ',moves, "totalDist = ",totalDist)
-            return moves + totalDist
-
-        else:
-            tempBelief = belief[x,y] * board.board[x,y]
-            deltaBelief = belief[x,y] - tempBelief 
-            belief[x,y] = tempBelief
-            
-            maxBelief = 0 
-            maxBelief = updateBelief(currCell, deltaBelief, maxBelief, ruleType, belief, board.board)
-            cellList = rule(belief,maxBelief,board.board,currCell)
-            
-            prevCell = currCell
-            if dist:
-                minDist = board.dim**2
-                for cell in cellList:
-                    tempDist = manhattanD(cell,currCell)
-                    if  tempDist < minDist:
-                        currCell = cell
-                        minDist = tempDist
-            else:
-                currCell = rand.choice(cellList)
-
 
 def Agent1_2_3(board,ruleType,dist):
     belief = np.full((board.dim,board.dim),1/board.dim**2, dtype = float)
@@ -123,23 +71,16 @@ def Agent1_2_3(board,ruleType,dist):
         rule = rule2
     elif ruleType == 3:
         rule = rule3
-    else:
-        rule = rule4
     
     currCell = (rand.randint(0,board.dim-1),rand.randint(0,board.dim-1))
     prevCell = currCell
     while True:
         moves+=1
-        #print("moves: ",moves,"currCell: ",currCell)
         x,y = currCell
         if dist: totalDist += manhattanD(currCell,prevCell) #if we are counting movement as a move
         chance = rand.random()
        
-        if currCell == board.target:
-            print("moves: ",moves, "chance: ", chance)
-          #  print(belief)
-            m,k = board.target
-            print("currCell: ",x,y,"chance: ", board.board[x,y],"target: ",m,k,"chance: ",board.board[m,k])
+        
         if  chance >= board.board[x,y] and currCell == board.target:
             #print("current target belief :", belief[x,y])
             #print("currCell = ",currCell,'moves = ',moves, "totalDist = ",totalDist)
@@ -165,20 +106,54 @@ def Agent1_2_3(board,ruleType,dist):
             else:
                 currCell = rand.choice(cellList)
 
-                
+def improvedAgent(board,ruleType,dist):
+    belief = np.full((board.dim,board.dim),1/board.dim**2, dtype = float)
+    moves = 0; totalDist = 0
 
+    numTriesMap = {.1 : 1, .3 : 1, .7 : 3, .9 : 7}
 
+    if ruleType == 1:
+        rule = rule1
+    elif ruleType == 2:
+        rule = rule2
+    elif ruleType == 3:
+        rule = rule3
+    
+    currCell = (rand.randint(0,board.dim-1),rand.randint(0,board.dim-1))
+    prevCell = currCell
+    while True:
+        
+        x,y = currCell
+        if dist: totalDist += manhattanD(currCell,prevCell) #if we are counting movement as a move
+        chance = rand.random()
+        
+        iterations = numTriesMap[board.board[x,y]]
+        for i in range(iterations):
+            moves+=1
+
+            if  chance >= board.board[x,y] and currCell == board.target:
+                #print("current target belief :", belief[x,y])
+                #print("currCell = ",currCell,'moves = ',moves, "totalDist = ",totalDist)
+                return moves + totalDist
+
+        else:
+            deltaBelief = 0
+            for i in range(iterations):
+                tempBelief = belief[x,y] * board.board[x,y]
+                deltaBelief += belief[x,y] - tempBelief 
+                belief[x,y] = tempBelief
             
-                    
-
-
-        
-
-        
-    
-    
-    
-    
-
-
-
+            maxBelief = -math.inf
+            maxBelief = updateBelief(currCell, deltaBelief, maxBelief, ruleType, belief, board.board)
+            cellList = rule(belief,maxBelief,board.board,currCell)
+            
+            prevCell = currCell
+            if dist:
+                minDist = board.dim**2
+                for cell in cellList:
+                    tempDist = manhattanD(cell,currCell)
+                    if  tempDist < minDist:
+                        currCell = cell
+                        minDist = tempDist
+            else:
+                currCell = rand.choice(cellList)        
